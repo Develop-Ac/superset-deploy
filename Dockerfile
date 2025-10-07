@@ -5,9 +5,9 @@ USER root
 # Copia o arquivo de configuração
 COPY superset_config.py /app/
 
-# Instala os pacotes necessários
+# Instala os pacotes necessários de forma mais robusta
 RUN . /app/.venv/bin/activate && \
-    pip install --no-cache-dir psycopg2-binary redis
+    pip install --no-cache-dir --break-system-packages psycopg2-binary redis
 
 USER superset
 # Mantém o entrypoint padrão
