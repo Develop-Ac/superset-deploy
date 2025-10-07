@@ -1,5 +1,5 @@
 # Escolha uma tag estável (ex.: 6.0.0)
-FROM apache/superset:6.0.0
+FROM apache/superset:5.0.0
 
 USER root
 # Ative o venv da imagem e instale os pacotes necessários
