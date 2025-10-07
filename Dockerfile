@@ -1,12 +1,14 @@
-# Escolha uma tag estável (ex.: 6.0.0)
+# Escolha uma tag estável
 FROM apache/superset:5.0.0
 
 USER root
-# Ative o venv da imagem e instale os pacotes necessários
-# (psycopg2-binary = Postgres do metastore; redis = cache/celery)
+# Copia o arquivo de configuração
+COPY superset_config.py /app/
+
+# Instala os pacotes necessários
 RUN . /app/.venv/bin/activate && \
     pip install --no-cache-dir psycopg2-binary redis
 
 USER superset
-# Mantém o entrypoint padrão: run-server (Gunicorn) na 8088
+# Mantém o entrypoint padrão
 CMD ["/app/docker/entrypoints/run-server.sh"]
