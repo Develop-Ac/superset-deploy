@@ -88,24 +88,38 @@ RATELIMIT_ENABLED = False
 # =========================
 DEFAULT_ISO_TIME_FORMAT = "YYYY-MM-DD"
 
-COLOR_SCHEMES = {
-    "AC Acessórios": {
-        "id": "ac-acessorios",
+# ---- Paleta AC Acessórios (categorical) ----
+EXTRA_CATEGORICAL_COLOR_SCHEMES = [
+    {
+        "id": "ac_acessorios",
         "label": "AC Acessórios",
-        "description": "Paleta de cores corporativa da AC Acessórios",
+        "isDiverging": False,
         "colors": [
-            "#3067c5",  # azul principal
-            "#b6c947",  # verde AC
-            "#de7800",  # laranja AC
+            "#b6c947",  # verde
+            "#3067c5",  # azul
+            "#de7800",  # laranja
             "#000000",  # preto
-            "#ffffff",  # branco
-            "#5a7bd3",  # azul secundário
-            "#92aa3d",  # verde oliva
-            "#f3a24a",  # laranja claro
-            "#666666",  # cinza
-            "#9bb6f8",  # azul claro
-            "#d0db80"   # verde claro
+            "#ffffff",  # branco (use com cuidado em fills)
+            "#8fa92f",  # tons derivados (opcional)
+            "#274f98",
+            "#ff9a33",
+            "#222222",
+            "#e6e6e6"
         ],
-        "is_default": True  # define como padrão para novos gráficos
     }
-}
+]
+
+# (opcional) uma escala sequencial combinando com a marca
+EXTRA_SEQUENTIAL_COLOR_SCHEMES = [
+    {
+        "id": "ac_acessorios_seq",
+        "label": "AC Acessórios (Sequencial)",
+        "isDiverging": False,
+        "colors": [
+            "#e9f0c5", "#d5e48b", "#b6c947", "#86a82f", "#55761a"
+        ],
+    }
+]
+
+# Deixe esta como default no Explore (opcional)
+COLOR_SCHEME = "AC Acessórios"
