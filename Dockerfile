@@ -4,18 +4,18 @@ FROM apache/superset:${TAG}
 
 USER root
 
-# SO deps (ODBC/FreeTDS)
+# SO deps (ODBC/FreeTDS + driver ODBC do FreeTDS)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    unixodbc unixodbc-dev freetds-bin freetds-dev \
+    unixodbc unixodbc-dev freetds-bin freetds-dev tdsodbc \
  && rm -rf /var/lib/apt/lists/*
 
-# Pacotes Python no venv do Superset
+# Pacotes Python dentro do venv do Superset (use sempre python -m pip)
 RUN /app/.venv/bin/python -m ensurepip --upgrade || true \
- && /app/.venv/bin/pip install --upgrade pip setuptools wheel \
- && /app/.venv/bin/pip install --no-cache-dir pyodbc pymssql
+ && /app/.venv/bin/python -m pip install --upgrade pip setuptools wheel \
+ && /app/.venv/bin/python -m pip install --no-cache-dir pyodbc pymssql
 
-# (opcional) declarar o driver FreeTDS no odbcinst
-RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nSetup=/usr/lib/x86_64-linux-gnu/odbc/libtdsS.so\nUsageCount=1\n" \
+# (opcional) registrar driver no odbcinst (ajuda o pyodbc a encontrar)
+RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nUsageCount=1\n" \
     > /etc/odbcinst.ini
 
 # Seu config
