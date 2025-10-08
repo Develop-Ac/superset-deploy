@@ -1,28 +1,41 @@
+# Dockerfile
 ARG TAG=5.0.0
 FROM apache/superset:${TAG}
 
 USER root
 
-# SO deps (ODBC/FreeTDS + driver ODBC)
+# =========================
+# 1) Instalar dependências do sistema
+# =========================
 RUN apt-get update && apt-get install -y --no-install-recommends \
     unixodbc unixodbc-dev freetds-bin freetds-dev tdsodbc \
  && rm -rf /var/lib/apt/lists/*
 
-# Python deps dentro do venv do Superset
-# Use SEMPRE "python -m pip" do venv
-RUN /app/.venv/bin/python -m pip install --upgrade pip setuptools wheel \
- && /app/.venv/bin/python -m pip install --no-cache-dir \
+# =========================
+# 2) Garantir que o venv tenha pip
+# =========================
+RUN /app/python_env/bin/python -m ensurepip --upgrade || true \
+ && /app/python_env/bin/python -m pip install --upgrade pip setuptools wheel
+
+# =========================
+# 3) Instalar pacotes Python necessários
+# =========================
+RUN /app/python_env/bin/python -m pip install --no-cache-dir \
     psycopg2-binary \
     pymssql \
     pyodbc \
     pillow \
     redis
 
-# Registrar driver FreeTDS no odbcinst (ajuda o pyodbc a achar o .so)
+# =========================
+# 4) Registrar o driver FreeTDS no sistema ODBC
+# =========================
 RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nUsageCount=1\n" \
     > /etc/odbcinst.ini
 
-# Seu config
+# =========================
+# 5) Copiar configurações customizadas do Superset
+# =========================
 COPY superset_config.py /app/superset_config.py
 ENV SUPERSET_CONFIG_PATH=/app/superset_config.py
 
