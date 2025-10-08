@@ -97,7 +97,7 @@ EXTRA_CATEGORICAL_COLOR_SCHEMES = [
             "#b6c947",  # verde
             "#3067c5",  # azul
             "#e17c3a",  # laranja
-            "#000000",  # preto
+            "#000000",  # preto 
             "#ffffff",  # branco (use com cuidado em fills)
             "#8fa92f",  # tons derivados (opcional)
             "#274f98",
@@ -132,3 +132,11 @@ CUSTOM_NUMBER_FORMATS = {
     # abreviado: mil (k), milhão (M), etc.
     "Moeda (R$ abreviado)": "R$~s",
 }
+
+# ---- Cores fixas por label ----
+LABEL_COLORS = {
+    "BALCÃO": "#b6c947",         # verde
+    "ATACADO": "#3067c5",        # azul
+    "VAREJO-SERVIÇO": "#e17c3a", # laranja
+}
+
