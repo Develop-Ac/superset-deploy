@@ -97,7 +97,7 @@ EXTRA_CATEGORICAL_COLOR_SCHEMES = [
         "colors": [
             "#b6c947",  # verde
             "#3067c5",  # azul
-            "#de7800",  # laranja
+            "#e17c3a",  # laranja
             "#000000",  # preto
             "#ffffff",  # branco (use com cuidado em fills)
             "#8fa92f",  # tons derivados (opcional)
