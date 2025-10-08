@@ -5,18 +5,20 @@ FROM node:18-bullseye AS fe-build
 ARG TAG
 WORKDIR /src
 
-# Dependências mínimas para scripts do build
+# + zstd (necessário p/ simple-zstd usado no webpack.proxy-config)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git python3 python3-pip \
+    git python3 make g++ zstd \
  && rm -rf /var/lib/apt/lists/*
 
-# Clona exatamente a versão do Superset que você usa na imagem final
 RUN git clone --branch ${TAG} --depth 1 https://github.com/apache/superset.git .
-
-# Build do frontend (gera /superset-frontend/dist)
 WORKDIR /src/superset-frontend
-RUN npm ci
-RUN npm run build
+
+# (opcional, ajuda performance/estabilidade)
+ENV NPM_CONFIG_LOGLEVEL=warn NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false \
+    NODE_OPTIONS=--max_old_space_size=2048
+
+RUN --mount=type=cache,target=/root/.npm npm ci
+RUN --mount=type=cache,target=/root/.npm npm run build
 
 # -------- Stage 2: imagem final do Superset --------
 # IMPORTANTE: declarar o ARG antes do FROM
