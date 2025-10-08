@@ -42,3 +42,11 @@ CELERY_CONFIG = CeleryConfig
 
 # Rodando atrás de proxy/reverso do EasyPanel
 ENABLE_PROXY_FIX = True
+
+BABEL_DEFAULT_LOCALE = "pt_BR"
+BABEL_DEFAULT_TIMEZONE = "America/Cuiaba"
+LANGUAGES = {
+  "pt_BR": {"flag": "br", "name": "Português (Brasil)"},
+  "en": {"flag": "us", "name": "English"},
+}
+
