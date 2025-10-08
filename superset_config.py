@@ -16,8 +16,7 @@ CONTENT_SECURITY_POLICY_WARNING = False
 BABEL_DEFAULT_LOCALE = "pt_BR"
 BABEL_DEFAULT_TIMEZONE = os.environ.get("SUPERSET_TIMEZONE", "America/Cuiaba")
 LANGUAGES = {
-    "pt_BR": {"flag": "br", "name": "Português (Brasil)"},
-    "en": {"flag": "us", "name": "English"},
+    "pt_BR": {"flag": "br", "name": "Português (Brasil)"}
 }
 
 # =========================
@@ -123,3 +122,13 @@ EXTRA_SEQUENTIAL_COLOR_SCHEMES = [
 
 # Deixe esta como default no Explore (opcional)
 COLOR_SCHEME = "AC Acessórios"
+
+# Formatos de número personalizados (aparecem nos selects de formato)
+CUSTOM_NUMBER_FORMATS = {
+    # usa separadores do pt-BR e 2 casas
+    "Moeda (R$ 2 casas)": "R$,.2f",
+    # sem casas decimais
+    "Moeda (R$ 0 casas)": "R$,.0f",
+    # abreviado: mil (k), milhão (M), etc.
+    "Moeda (R$ abreviado)": "R$~s",
+}
