@@ -81,7 +81,7 @@ FEATURE_FLAGS = {
 #  Ajustes de desempenho
 # =========================
 # Evita warnings de rate limit sem backend
-RATELIMIT_ENABLED = false
+RATELIMIT_ENABLED = False
 
 # =========================
 #  Dica para time formats comuns (SQL Server)
