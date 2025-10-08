@@ -1,6 +1,6 @@
 # -------- Stage 1: build do frontend com i18n (pt_BR) --------
 # Declare TAG aqui também para usar no git clone
-ARG TAG=5.0.0
+ARG TAG=6.0.0rc1
 FROM node:18-bullseye AS fe-build
 ARG TAG
 WORKDIR /src
