@@ -81,9 +81,31 @@ FEATURE_FLAGS = {
 #  Ajustes de desempenho
 # =========================
 # Evita warnings de rate limit sem backend
-RATELIMIT_ENABLED = False
+RATELIMIT_ENABLED = false
 
 # =========================
 #  Dica para time formats comuns (SQL Server)
 # =========================
-DEFAULT_ISO_TIME_FORMAT = "YYYY-MM-DDTHH:mm:ss.SSSSSS"
+DEFAULT_ISO_TIME_FORMAT = "YYYY-MM-DD"
+
+COLOR_SCHEMES = {
+    "AC Acessórios": {
+        "id": "ac-acessorios",
+        "label": "AC Acessórios",
+        "description": "Paleta de cores corporativa da AC Acessórios",
+        "colors": [
+            "#3067c5",  # azul principal
+            "#b6c947",  # verde AC
+            "#de7800",  # laranja AC
+            "#000000",  # preto
+            "#ffffff",  # branco
+            "#5a7bd3",  # azul secundário
+            "#92aa3d",  # verde oliva
+            "#f3a24a",  # laranja claro
+            "#666666",  # cinza
+            "#9bb6f8",  # azul claro
+            "#d0db80"   # verde claro
+        ],
+        "is_default": True  # define como padrão para novos gráficos
+    }
+}
