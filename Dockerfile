@@ -1,20 +1,24 @@
-# Dockerfile
 ARG TAG=5.0.0
 FROM apache/superset:${TAG}
 
 USER root
 
-# SO deps (ODBC/FreeTDS + driver ODBC do FreeTDS)
+# SO deps (ODBC/FreeTDS + driver ODBC)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     unixodbc unixodbc-dev freetds-bin freetds-dev tdsodbc \
  && rm -rf /var/lib/apt/lists/*
 
-# Pacotes Python dentro do venv do Superset (use sempre python -m pip)
-RUN /app/.venv/bin/python -m ensurepip --upgrade || true \
- && /app/.venv/bin/python -m pip install --upgrade pip setuptools wheel \
- && /app/.venv/bin/python -m pip install --no-cache-dir pyodbc pymssql
+# Python deps dentro do venv do Superset
+# Use SEMPRE "python -m pip" do venv
+RUN /app/.venv/bin/python -m pip install --upgrade pip setuptools wheel \
+ && /app/.venv/bin/python -m pip install --no-cache-dir \
+    psycopg2-binary \
+    pymssql \
+    pyodbc \
+    pillow \
+    redis
 
-# (opcional) registrar driver no odbcinst (ajuda o pyodbc a encontrar)
+# Registrar driver FreeTDS no odbcinst (ajuda o pyodbc a achar o .so)
 RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nUsageCount=1\n" \
     > /etc/odbcinst.ini
 
