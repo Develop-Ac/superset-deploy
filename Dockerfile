@@ -1,6 +1,6 @@
-# Dockerfile otimizado para deploy via EasyPanel com a versão estável 5.1.0
+# Dockerfile otimizado para deploy via EasyPanel com a versão estável 5.0.0
 # Baseado na imagem oficial, que já tem o frontend pré-compilado e traduções inclusas.
-FROM apache/superset:5.1.0
+FROM apache/superset:5.0.0
 
 # Troca para o usuário root para poder instalar pacotes do sistema.
 USER root
@@ -19,13 +19,12 @@ RUN /app/.venv/bin/python -m pip install --no-cache-dir \
 
 # 3) Configura o driver FreeTDS para ser reconhecido pelo sistema ODBC.
 RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nUsageCount=1\n" \
-  > /etc/odbcinst.ini
+  > /etc/odbc/odbcinst.ini
 
 # 4) Copia o arquivo de configuração customizado para dentro da imagem.
-#    O EasyPanel irá construir a imagem a partir do contexto onde este Dockerfile está.
 COPY superset_config.py /app/superset_config.py
 
-# 5) Define a variável de ambiente para que o Superset saiba onde encontrar a configuração.
+# 5) Define a variável de ambiente para que o Superset encontre sua configuração.
 ENV SUPERSET_CONFIG_PATH=/app/superset_config.py
 
 # 6) Healthcheck padrão para o EasyPanel monitorar a saúde do container.
