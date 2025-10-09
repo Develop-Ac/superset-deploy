@@ -2,10 +2,7 @@ FROM apache/superset:5.0.0
 
 USER root
 
-# Use bash se precisar, mas aqui não é obrigatório
-# SHELL ["/bin/bash", "-lc"]
-
-# 1) Toolchain e libs do sistema
+# 1) Dependências de sistema (toolchain, FreeTDS, ODBC)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
@@ -24,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-# 2) (Opcional) MS ODBC Driver 18 — deixe este bloco se quiser usar pyodbc
+# 2) (Opcional) MS ODBC Driver 18 (para também poder usar pyodbc)
 RUN . /etc/os-release && \
     curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
       | gpg --dearmor -o /usr/share/keyrings/ms-prod.gpg && \
@@ -33,16 +30,19 @@ RUN . /etc/os-release && \
     apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 && \
     rm -rf /var/lib/apt/lists/*
 
-# 3) Drivers Python dentro do venv do Superset usando UV (não use pip)
-# Se precisar forçar build do pymssql com FreeTDS interno, descomente:
-# ENV PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1
-RUN /app/.venv/bin/uv pip install --no-cache-dir \
-    psycopg2-binary \
-    pymssql \
-    pyodbc \
-    redis
+# 3) Bootstrapa o pip dentro do venv do Superset e instala os drivers
+#    (fallback instala python3-pip se ensurepip estiver indisponível por algum motivo)
+RUN /app/.venv/bin/python -m ensurepip --upgrade || true && \
+    (command -v /app/.venv/bin/pip >/dev/null || /app/.venv/bin/python -m ensurepip --upgrade) || true && \
+    (command -v /app/.venv/bin/pip >/dev/null || (apt-get update && apt-get install -y --no-install-recommends python3-pip && rm -rf /var/lib/apt/lists/*)) && \
+    /app/.venv/bin/python -m pip install --upgrade pip setuptools wheel && \
+    /app/.venv/bin/python -m pip install --no-cache-dir \
+        psycopg2-binary \
+        pymssql \
+        pyodbc \
+        redis
 
-# (Opcional) Registrar FreeTDS no ODBC (útil para testes via isql/pyodbc)
+# (Opcional) registrar o FreeTDS no ODBC (útil para testes isql/pyodbc)
 RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nUsageCount=1\n" \
   > /etc/odbc/odbcinst.ini
 
