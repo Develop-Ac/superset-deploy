@@ -1,51 +1,52 @@
-##############################################
-# ---------- Stage 1: fe-build --------------
-##############################################
-ARG TAG=6.0.0rc2
+# =========================================
+# Stage 1: Build do frontend (Superset 6.x)
+# =========================================
 FROM node:18-bullseye AS fe-build
-ARG TAG
+ARG TAG=6.0.0rc2
 WORKDIR /src
 
-# deps nativas para compilar addons / zstd (simple-zstd)
+# Ferramentas nativas + zstd (requerido em alguns passos de build)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git python3 make g++ zstd \
+    git python3 make g++ zstd curl ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-# pega o código da versão TAG
+# Clona exatamente a tag desejada do Superset
 RUN git clone --branch ${TAG} --depth 1 https://github.com/apache/superset.git .
+
+# Garante uso do registry público do npm (evita ETARGET por mirror incompleto)
+RUN npm config set registry https://registry.npmjs.org/
+
+# Ativa yarn classic e respeita o lockfile do projeto
+RUN corepack enable && corepack prepare yarn@1.22.22 --activate
+
 WORKDIR /src/superset-frontend
+ENV NODE_OPTIONS=--max_old_space_size=4096 \
+    YARN_ENABLE_IMMUTABLE_INSTALLS=false
 
-# ambiente npm
-ENV NPM_CONFIG_LOGLEVEL=warn \
-    NPM_CONFIG_FUND=false \
-    NPM_CONFIG_AUDIT=false \
-    NODE_OPTIONS=--max_old_space_size=4096
+# Instala dependências exatamente conforme yarn.lock
+# (usa cache para acelerar builds subsequentes)
+RUN --mount=type=cache,target=/root/.yarn \
+    --mount=type=cache,target=/root/.cache/yarn \
+    yarn install --frozen-lockfile
 
-# instala dependências travadas no lock do projeto
-RUN --mount=type=cache,target=/root/.npm npm ci --legacy-peer-deps --quiet
+# Compila: os bundles de idioma (inclui pt_BR) já vêm no 6.x
+RUN --mount=type=cache,target=/root/.yarn \
+    --mount=type=cache,target=/root/.cache/yarn \
+    yarn build
 
-# instala explicitamente os pacotes que o webpack reclamou (com versões estáveis)
-# OBS: usamos --legacy-peer-deps para não travar em peer deps
-RUN npm install --no-save --legacy-peer-deps --quiet \
-    @react-spring/web@9.7.2 \
-    global-box@1.0.0 \
-    query-string@7.1.1 \
-    @deck.gl/mesh-layers@8.9.39 \
-    @deck.gl/extensions@8.9.39
 
-# compila o bundle (inclui os idiomas padrão do 6.x; pt_BR já vem)
-RUN --mount=type=cache,target=/root/.npm npm run build
-
-##############################################
-# ---------- Stage 2: imagem final ----------
-##############################################
-# mesma TAG do fe-build para manter compatibilidade
+# =========================================
+# Stage 2: Imagem final do Superset
+# =========================================
+ARG TAG=6.0.0rc2
 FROM apache/superset:${TAG}
+
 USER root
 
 # 1) Pacotes do SO (ODBC + FreeTDS) + curl p/ healthcheck
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    unixodbc unixodbc-dev freetds-bin freetds-dev tdsodbc curl \
+    unixodbc unixodbc-dev freetds-bin freetds-dev tdsodbc \
+    curl ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
 # 2) Garantir pip dentro do venv do Superset
@@ -65,18 +66,14 @@ RUN /app/.venv/bin/python -m pip install --no-cache-dir \
 RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nUsageCount=1\n" \
   > /etc/odbcinst.ini
 
-# 5) Copiar os assets compilados e traduções do fe-build
+# 5) Copiar assets do frontend já compilados
 COPY --from=fe-build /src/superset-frontend/dist/ /app/superset/static/assets/
-COPY --from=fe-build /src/superset/translations/ /app/superset/translations/
 
-# 6) Gera .mo (i18n backend); se já existir, ignora
-RUN /app/.venv/bin/pybabel compile -d /app/superset/translations -l pt_BR || true
-
-# 7) Config do Superset
+# 6) Copiar suas configs
 COPY superset_config.py /app/superset_config.py
 ENV SUPERSET_CONFIG_PATH=/app/superset_config.py
 
-# Healthcheck simples
-HEALTHCHECK --interval=30s --timeout=5s --retries=10 CMD curl -fsS http://127.0.0.1:8088/health || exit 1
+# (Opcional) Healthcheck simples
+HEALTHCHECK --interval=30s --timeout=3s --retries=10 CMD curl -sf http://127.0.0.1:8088/health || exit 1
 
 USER superset
