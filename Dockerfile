@@ -30,7 +30,7 @@ RUN npm install --no-save --legacy-peer-deps --quiet \
     @react-spring/web@9.7.2 \
     global-box@1.0.0 \
     query-string@7.1.1 \
-    @deck.gl/mesh-layers@8.9.39 \
+    @deck.gl/mesh-layers@8.9.3 \
     @deck.gl/extensions@8.9.35 \
     @deck.gl/widgets@8.9.35
 
