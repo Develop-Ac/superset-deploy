@@ -3,70 +3,63 @@ import os
 # =========================
 #  Configurações de Segurança e Básicas
 # =========================
-# Esta variável SUPERSET_SECRET_KEY DEVE ser configurada no painel do EasyPanel.
-SECRET_KEY = os.environ.get("SUPERSET_SECRET_KEY", "CHANGE-ME-IN-PRODUCTION")
+# Lê a SECRET_KEY diretamente da sua variável de ambiente. Essencial para a segurança.
+SECRET_KEY = os.environ.get("SUPERSET_SECRET_KEY")
 
-# Essencial para funcionar atrás do proxy reverso do EasyPanel.
+# Necessário para o Superset funcionar corretamente atrás do proxy reverso do EasyPanel.
 ENABLE_PROXY_FIX = True
-
-# Desabilitar o Talisman pode ser útil se o EasyPanel já gerencia headers de segurança (CSP).
-TALISMAN_ENABLED = False
-CONTENT_SECURITY_POLICY_WARNING = False
 
 # =========================
 #  Tradução (i18n) e Fuso Horário
 # =========================
-# Ativa o português do Brasil como idioma padrão.
+# Ativa o português do Brasil como o idioma padrão da interface.
 BABEL_DEFAULT_LOCALE = "pt_BR"
 LANGUAGES = {
     "pt_BR": {"flag": "br", "name": "Português (Brasil)"},
     "en": {"flag": "us", "name": "English"},
 }
-# Configure SUPERSET_TIMEZONE no EasyPanel ou use o padrão "America/Cuiaba".
+# Lê o fuso horário da sua variável de ambiente SUPERSET_TIMEZONE.
 BABEL_DEFAULT_TIMEZONE = os.environ.get("SUPERSET_TIMEZONE", "America/Cuiaba")
 
 # =========================
 #  Conexão com o Metastore (Banco de Dados do Superset)
 # =========================
-# O EasyPanel fornecerá estas variáveis automaticamente ao linkar um serviço de banco de dados.
-_pg_host = os.environ.get("DATABASE_HOST", "postgres")
-_pg_port = os.environ.get("DATABASE_PORT", "5432")
-_pg_user = os.environ.get("DATABASE_USER", "superset")
-_pg_pass = os.environ.get("DATABASE_PASSWORD", "")
-_pg_db   = os.environ.get("DATABASE_DB", "superset")
+# Monta a string de conexão usando as variáveis DATABASE_* fornecidas pelo EasyPanel.
+_pg_host = os.environ.get("DATABASE_HOST")
+_pg_port = os.environ.get("DATABASE_PORT")
+_pg_user = os.environ.get("DATABASE_USER")
+_pg_pass = os.environ.get("DATABASE_PASSWORD")
+_pg_db   = os.environ.get("DATABASE_DB")
 SQLALCHEMY_DATABASE_URI = f"postgresql+psycopg2://{_pg_user}:{_pg_pass}@{_pg_host}:{_pg_port}/{_pg_db}"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # =========================
-#  Conexão com o Redis (Cache e Celery)
+#  Conexão com o Redis (Cache e Tarefas em Background)
 # =========================
-# O EasyPanel fornecerá estas variáveis ao linkar um serviço Redis.
-USE_REDIS = str(os.environ.get("USE_REDIS", "1")).lower() in ("1", "true", "yes")
-_rd_host = os.environ.get("REDIS_HOST", "redis")
-_rd_port = os.environ.get("REDIS_PORT", "6379")
+# Monta a configuração do Redis usando as variáveis REDIS_* fornecidas pelo EasyPanel.
+_rd_host = os.environ.get("REDIS_HOST")
+_rd_port = os.environ.get("REDIS_PORT")
+REDIS_URL = f"redis://{_rd_host}:{_rd_port}/0"
 
-if USE_REDIS:
-    REDIS_URL = f"redis://{_rd_host}:{_rd_port}/0"
-    CACHE_CONFIG = {
-        "CACHE_TYPE": "RedisCache",
-        "CACHE_DEFAULT_TIMEOUT": 300,
-        "CACHE_KEY_PREFIX": "superset_",
-        "CACHE_REDIS_URL": REDIS_URL,
-    }
-    CELERY_CONFIG = {
-        "broker_url": REDIS_URL,
-        "result_backend": REDIS_URL,
-    }
-else:
-    CACHE_CONFIG = {"CACHE_TYPE": "SimpleCache"}
+CACHE_CONFIG = {
+    "CACHE_TYPE": "RedisCache",
+    "CACHE_DEFAULT_TIMEOUT": 300,
+    "CACHE_KEY_PREFIX": "superset_",
+    "CACHE_REDIS_URL": REDIS_URL,
+}
+CELERY_CONFIG = {
+    "broker_url": REDIS_URL,
+    "result_backend": REDIS_URL,
+}
 
 # =========================
-#  Feature Flags e Customizações
+#  Feature Flags Essenciais
 # =========================
+# Ativa funcionalidades úteis e recomendadas do Superset.
 FEATURE_FLAGS = {
     "DASHBOARD_NATIVE_FILTERS": True,
     "ENABLE_TEMPLATE_PROCESSING": True,
-    "ALERT_REPORTS": USE_REDIS,
+    "ALERT_REPORTS": True, # Habilita alertas e relatórios, que dependem do Redis.
 }
 
 # Suas customizações de cores, formatos, etc. (mantidas integralmente)
