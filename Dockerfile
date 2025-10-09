@@ -5,10 +5,16 @@ FROM apache/superset:5.0.0
 # Troca para o usuário root para poder instalar pacotes do sistema.
 USER root
 
-# 1) Instala os drivers ODBC para conexão com SQL Server (via FreeTDS) e o curl para o healthcheck.
+# 1) Instala os drivers ODBC, o curl, e as FERRAMENTAS DE BUILD necessárias.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    unixodbc unixodbc-dev freetds-bin freetds-dev tdsodbc curl \
- && rm -rf /var/lib/apt/lists/*
+    # Ferramentas de compilação para o pymssql e pyodbc
+    build-essential python3-dev \
+    # Drivers ODBC para SQL Server
+    unixodbc unixodbc-dev freetds-bin freetds-dev tdsodbc \
+    # Utilitário para o healthcheck
+    curl \
+ # Limpa o cache para reduzir o tamanho da imagem final
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 2) Instala os drivers Python para seus bancos de dados (Postgres, SQL Server, etc.).
 RUN /app/.venv/bin/python -m pip install --no-cache-dir \
