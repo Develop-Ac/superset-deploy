@@ -30,9 +30,9 @@ RUN npm install --no-save --legacy-peer-deps --quiet \
     @react-spring/web@9.7.2 \
     global-box@1.0.0 \
     query-string@7.1.1 \
-    @deck.gl/widgets@8.9.34 \
-    @deck.gl/mesh-layers@8.9.34 \
-    @deck.gl/extensions@8.9.34
+    @deck.gl/widgets@^8.9.0 \
+    @deck.gl/mesh-layers@^8.9.0 \
+    @deck.gl/extensions@^8.9.0
 
 # compila o bundle (inclui os idiomas padrão do 6.x; pt_BR já vem)
 RUN --mount=type=cache,target=/root/.npm npm run build
