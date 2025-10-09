@@ -31,7 +31,6 @@ RUN . /etc/os-release && \
     rm -rf /var/lib/apt/lists/*
 
 # 3) Bootstrapa o pip dentro do venv do Superset e instala os drivers
-#    (fallback instala python3-pip se ensurepip estiver indisponível por algum motivo)
 RUN /app/.venv/bin/python -m ensurepip --upgrade || true && \
     (command -v /app/.venv/bin/pip >/dev/null || /app/.venv/bin/python -m ensurepip --upgrade) || true && \
     (command -v /app/.venv/bin/pip >/dev/null || (apt-get update && apt-get install -y --no-install-recommends python3-pip && rm -rf /var/lib/apt/lists/*)) && \
@@ -42,9 +41,10 @@ RUN /app/.venv/bin/python -m ensurepip --upgrade || true && \
         pyodbc \
         redis
 
-# (Opcional) registrar o FreeTDS no ODBC (útil para testes isql/pyodbc)
-RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nUsageCount=1\n" \
-  > /etc/odbc/odbcinst.ini
+# [CORRIGIDO] Cria o diretório /etc/odbc ANTES de escrever o arquivo de configuração.
+RUN mkdir -p /etc/odbc && \
+    printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nUsageCount=1\n" \
+    > /etc/odbc/odbcinst.ini
 
 # 4) Config do Superset (se houver)
 COPY superset_config.py /app/superset_config.py
