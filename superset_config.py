@@ -11,10 +11,10 @@ TALISMAN_ENABLED = False
 CONTENT_SECURITY_POLICY_WARNING = False
 
 # ==== i18n / Locale / Timezone ====
-BABEL_DEFAULT_LOCALE = "pt"
+BABEL_DEFAULT_LOCALE = "pt_BR"
 BABEL_DEFAULT_TIMEZONE = os.environ.get("SUPERSET_TIMEZONE", "America/Cuiaba")
 LANGUAGES = {
-    "pt": {"flag": "br", "name": "Português (Brasil)"},
+    "pt_BR": {"flag": "br", "name": "Português (Brasil)"},
     "en": {"flag": "us", "name": "English"},
 }
 
