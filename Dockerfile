@@ -1,83 +1,35 @@
-##############################################
-# ---------- Stage 1: fe-build --------------
-##############################################
-ARG TAG=6.0.0rc2
-FROM node:18-bullseye AS fe-build
-ARG TAG
-WORKDIR /src
+# Dockerfile otimizado para deploy via EasyPanel com a versão estável 5.1.0
+# Baseado na imagem oficial, que já tem o frontend pré-compilado e traduções inclusas.
+FROM apache/superset:5.1.0
 
-# deps nativas para compilar addons / zstd (simple-zstd)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git python3 make g++ zstd \
- && rm -rf /var/lib/apt/lists/*
-
-# pega o código da versão TAG
-RUN git clone --branch ${TAG} --depth 1 https://github.com/apache/superset.git .
-WORKDIR /src/superset-frontend
-
-# ambiente npm
-ENV NPM_CONFIG_LOGLEVEL=warn \
-    NPM_CONFIG_FUND=false \
-    NPM_CONFIG_AUDIT=false \
-    NODE_OPTIONS=--max_old_space_size=4096
-
-# instala dependências travadas no lock do projeto
-RUN --mount=type=cache,target=/root/.npm npm ci --legacy-peer-deps --quiet
-
-# instala explicitamente os pacotes que o webpack reclamou (com versões estáveis)
-# OBS: usamos --legacy-peer-deps para não travar em peer deps
-RUN npm install --no-save --legacy-peer-deps --quiet \
-    @react-spring/web@9.7.2 \
-    global-box@1.0.0 \
-    query-string@7.1.1 \
-    @deck.gl/mesh-layers@8.9.3 \
-    @deck.gl/extensions@8.9.3 \
-    @deck.gl/widgets@8.9.3
-
-# compila o bundle (inclui os idiomas padrão do 6.x; pt_BR já vem)
-RUN --mount=type=cache,target=/root/.npm npm run build
-
-##############################################
-# ---------- Stage 2: imagem final ----------
-##############################################
-# mesma TAG do fe-build para manter compatibilidade
-FROM apache/superset:${TAG}
+# Troca para o usuário root para poder instalar pacotes do sistema.
 USER root
 
-# 1) Pacotes do SO (ODBC + FreeTDS) + curl p/ healthcheck
+# 1) Instala os drivers ODBC para conexão com SQL Server (via FreeTDS) e o curl para o healthcheck.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     unixodbc unixodbc-dev freetds-bin freetds-dev tdsodbc curl \
  && rm -rf /var/lib/apt/lists/*
 
-# 2) Garantir pip dentro do venv do Superset
-RUN /app/.venv/bin/python -m ensurepip --upgrade || true \
- && /app/.venv/bin/python -m pip install --upgrade pip setuptools wheel
-
-# 3) Drivers/bindings Python necessários
+# 2) Instala os drivers Python para seus bancos de dados (Postgres, SQL Server, etc.).
 RUN /app/.venv/bin/python -m pip install --no-cache-dir \
     psycopg2-binary \
     pymssql \
     pyodbc \
-    pillow \
-    redis \
-    Babel
+    redis
 
-# 4) Registrar driver FreeTDS no ODBC do sistema
+# 3) Configura o driver FreeTDS para ser reconhecido pelo sistema ODBC.
 RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so\nUsageCount=1\n" \
   > /etc/odbcinst.ini
 
-# 5) Copiar os assets compilados e traduções do fe-build
-COPY --from=fe-build /src/superset-frontend/dist/ /app/superset/static/assets/
-COPY --from=fe-build /src/superset/translations/ /app/superset/translations/
-
-# 6) Gera .mo (i18n backend); se já existir, ignora
-RUN /app/.venv/bin/pybabel compile -d /app/superset/translations -l pt_BR || true
-
-# 7) Config do Superset
+# 4) Copia o arquivo de configuração customizado para dentro da imagem.
+#    O EasyPanel irá construir a imagem a partir do contexto onde este Dockerfile está.
 COPY superset_config.py /app/superset_config.py
+
+# 5) Define a variável de ambiente para que o Superset saiba onde encontrar a configuração.
 ENV SUPERSET_CONFIG_PATH=/app/superset_config.py
 
-# Healthcheck simples
+# 6) Healthcheck padrão para o EasyPanel monitorar a saúde do container.
 HEALTHCHECK --interval=30s --timeout=5s --retries=10 CMD curl -fsS http://127.0.0.1:8088/health || exit 1
 
+# 7) Retorna para o usuário 'superset' por questões de segurança.
 USER superset
