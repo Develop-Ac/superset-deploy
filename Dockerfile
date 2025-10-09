@@ -31,8 +31,8 @@ RUN npm install --no-save --legacy-peer-deps --quiet \
     global-box@1.0.0 \
     query-string@7.1.1 \
     @deck.gl/mesh-layers@8.9.3 \
-    @deck.gl/extensions@8.9.35 \
-    @deck.gl/widgets@8.9.35
+    @deck.gl/extensions@8.9.3 \
+    @deck.gl/widgets@8.9.3
 
 # compila o bundle (inclui os idiomas padrão do 6.x; pt_BR já vem)
 RUN --mount=type=cache,target=/root/.npm npm run build
