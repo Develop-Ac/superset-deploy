@@ -10,26 +10,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git python3 make g++ zstd curl ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-# Clona exatamente a tag desejada do Superset
-RUN git clone --branch ${TAG} --depth 1 https://github.com/apache/superset.git .
-
 # Garante uso do registry público do npm (evita ETARGET por mirror incompleto)
 RUN npm config set registry https://registry.npmjs.org/
+
+# Clona exatamente a tag desejada do Superset para um diretório novo
+RUN git clone --branch ${TAG} --depth 1 https://github.com/apache/superset.git /src/superset
 
 # Ativa yarn classic e respeita o lockfile do projeto
 RUN corepack enable && corepack prepare yarn@1.22.22 --activate
 
-WORKDIR /src/superset-frontend
+# Vai para o diretório do frontend
+WORKDIR /src/superset/superset-frontend
+
 ENV NODE_OPTIONS=--max_old_space_size=4096 \
     YARN_ENABLE_IMMUTABLE_INSTALLS=false
 
-# Instala dependências exatamente conforme yarn.lock
-# (usa cache para acelerar builds subsequentes)
+# Instala dependências conforme yarn.lock (com cache)
 RUN --mount=type=cache,target=/root/.yarn \
     --mount=type=cache,target=/root/.cache/yarn \
     yarn install --frozen-lockfile
 
-# Compila: os bundles de idioma (inclui pt_BR) já vêm no 6.x
+# Compila (pt_BR já vem incluído no 6.x)
 RUN --mount=type=cache,target=/root/.yarn \
     --mount=type=cache,target=/root/.cache/yarn \
     yarn build
@@ -67,7 +68,7 @@ RUN printf "[FreeTDS]\nDescription=FreeTDS Driver\nDriver=/usr/lib/x86_64-linux-
   > /etc/odbcinst.ini
 
 # 5) Copiar assets do frontend já compilados
-COPY --from=fe-build /src/superset-frontend/dist/ /app/superset/static/assets/
+COPY --from=fe-build /src/superset/superset-frontend/dist/ /app/superset/static/assets/
 
 # 6) Copiar suas configs
 COPY superset_config.py /app/superset_config.py
