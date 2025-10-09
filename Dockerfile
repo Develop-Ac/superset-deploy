@@ -1,8 +1,8 @@
 # =========================================
 # Stage 1: Build do frontend (Superset 6.x)
 # =========================================
-FROM node:18-bullseye AS fe-build
 ARG TAG=6.0.0rc2
+FROM node:18-bullseye AS fe-build
 WORKDIR /src
 
 # Ferramentas nativas + zstd (requerido em alguns passos de build)
